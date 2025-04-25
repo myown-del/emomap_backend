@@ -1,0 +1,8 @@
+fastapi
+pydantic
+dotenv
+dishka==1.3.0
+asyncpg
+uvicorn
+psycopg2
+sqlalchemy>=2.0.0
