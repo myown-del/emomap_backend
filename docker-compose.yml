@@ -3,10 +3,9 @@ version: '3'
 services:
   app:
     build:
-      context: ./emomap
       dockerfile: Dockerfile
     volumes:
-      - ./emomap:/app
+      - ./emomap:/src/emomap
     ports:
       - "8080:8080"
     env_file:
@@ -18,7 +17,9 @@ services:
     image: postgres:15
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - .env
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
     ports:
       - "5432:5432"

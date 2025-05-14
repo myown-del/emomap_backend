@@ -1,10 +1,14 @@
 from fastapi import APIRouter, FastAPI
 
-from .users import router as users_router
+from .users.views import router as users_router
+from .auth.views import router as auth_router
+from .emotions import router as emotions_router
 
 
 def register_routers(app: FastAPI):
-    main_router = APIRouter(prefix="/api")
-    main_router.include_router(users_router)
+    api_router = APIRouter(prefix="/api")
+    api_router.include_router(users_router)
+    api_router.include_router(auth_router)
+    api_router.include_router(emotions_router)
 
-    app.include_router(main_router)
+    app.include_router(api_router)

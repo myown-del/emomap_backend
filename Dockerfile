@@ -1,14 +1,12 @@
-FROM python:3.10-slim
+FROM python:3.10.4
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-WORKDIR /app
+WORKDIR /src
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    rm requirements.txt
 
-COPY . .
+COPY /emomap /src/emomap
 
-ENTRYPOINT [ "python", "-m", "emomap.main" ]
+CMD ["python", "-m", "emomap.main"]

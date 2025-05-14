@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from .views import register_routers
 
 
-async def create_base_app():
+def create_base_app():
     app = FastAPI(
         title="Emomap API",
     )

@@ -1,15 +1,28 @@
-
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 
-class UserResponse(BaseModel):
+class UserProfileResponse(BaseModel):
     id: int
-    email: EmailStr
+    unique_id: str
+    name: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 
-class UserCreateRequest(BaseModel):
+class UserResponse(BaseModel):
+    id: int
+    unique_id: str
     email: EmailStr
-    password: str
+    registration_date: datetime
+    profile: Optional[UserProfileResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ProfileUpdateRequest(BaseModel):
+    """Request model for updating a user's profile"""
+    name: Optional[str] = None

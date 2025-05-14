@@ -1,42 +1,60 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Cookie
+from typing import Optional
 
 from emomap.controllers.users import UserController
-from emomap.dependencies import UserControllerDep
-from emomap.infrastructure.db.models.users import UserDB
-from emomap.schemas.user import UserCreateRequest, UserResponse
+from emomap.controllers.auth import AuthController
+from emomap.dependencies import UserControllerDep, AuthControllerDep
+from .schemas import UserResponse, ProfileUpdateRequest, UserProfileResponse
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/", response_model=list[UserResponse])
-async def get_users(user_controller: UserController = Depends(UserControllerDep)):
-    users = await user_controller.get_all(limit=10)
-    return users
-
-
-@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def create_user(
-    user_in: UserCreateRequest,
-    user_controller: UserController = Depends(UserControllerDep)
+@router.get("/me/profile", response_model=UserResponse)
+async def get_current_user_profile(
+    session_id: Optional[str] = Cookie(None, alias="session_id"),
+    auth_controller: AuthController = Depends(AuthControllerDep)
 ):
-    existing_user = await user_controller.get_by_email(user_in.email)
-    if existing_user:
+    """Get the full profile of the currently logged in user"""
+    if not session_id:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with this email already exists."
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
         )
     
-    new_user = await user_controller.create(email=user_in.email, password=user_in.password)
-    return new_user
+    user = await auth_controller.validate_session(session_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
+    
+    return user
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-async def get_user_by_id(
-    user_id: int,
+@router.put("/me/profile", response_model=UserProfileResponse)
+async def update_current_user_profile(
+    profile_data: ProfileUpdateRequest,
+    session_id: Optional[str] = Cookie(None, alias="session_id"),
+    auth_controller: AuthController = Depends(AuthControllerDep),
     user_controller: UserController = Depends(UserControllerDep)
 ):
-    user = await user_controller.get_by_id(user_id)
+    """Update the profile of the currently logged in user"""
+    if not session_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    
+    user = await auth_controller.validate_session(session_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return user
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
+    
+    user_profile = await user_controller.update_user_profile(
+        user_id=user.id,
+        name=profile_data.name
+    )
+    return user_profile

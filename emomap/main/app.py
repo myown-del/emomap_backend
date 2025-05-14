@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     lifespan_state.clear()
 
 
-async def create_app() -> FastAPI:
-    app = await create_base_app()
+def create_app() -> FastAPI:
+    app = create_base_app()
     app.router.lifespan_context = lifespan
     return app

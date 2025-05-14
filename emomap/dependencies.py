@@ -6,8 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .app_state import AppState
 from .controllers.base import BaseController
 from .controllers.users import UserController
+from .controllers.auth import AuthController
+from .controllers.emotions import EmotionController
 from .infrastructure.db.repositories.base import BaseRepository
 from .infrastructure.db.repositories.users import UserRepository
+from .infrastructure.db.repositories.auth import AuthRepository
+from .infrastructure.db.repositories.emotions import EmotionRepository
 
 RepoType = TypeVar("RepoType", bound=BaseRepository)
 CtrlType = TypeVar("CtrlType", bound=BaseController)
@@ -16,7 +20,8 @@ CtrlType = TypeVar("CtrlType", bound=BaseController)
 async def get_db_session(request: Request) -> AsyncGenerator[AsyncSession, None]:
     app_state: AppState = request.app.state.app_state
     async with app_state.session_factory() as session:
-        yield session
+        async with session.begin():
+            yield session
 
 
 def create_repo_dependency(repo_type: Type[RepoType]):
@@ -26,15 +31,35 @@ def create_repo_dependency(repo_type: Type[RepoType]):
 
 
 def create_controller_dependency(controller_type: Type[CtrlType]) -> Callable[..., CtrlType]:
-    def _get_controller(
-        user_repo: UserRepository = Depends(UserRepositoryDep)
-    ) -> CtrlType:
-        return controller_type(user_repo=user_repo)
+    if controller_type == AuthController:
+        def _get_auth_controller(
+            auth_repo: AuthRepository = Depends(AuthRepositoryDep),
+            user_repo: UserRepository = Depends(UserRepositoryDep)
+        ) -> AuthController:
+            return AuthController(auth_repo=auth_repo, user_repo=user_repo)
+        return _get_auth_controller
+    elif controller_type == UserController:
+        def _get_user_controller(
+            user_repo: UserRepository = Depends(UserRepositoryDep)
+        ) -> UserController:
+            return UserController(user_repo=user_repo)
+        return _get_user_controller
+    elif controller_type == EmotionController:
+        def _get_emotion_controller(
+            emotion_repo: EmotionRepository = Depends(EmotionRepositoryDep)
+        ) -> EmotionController:
+            return EmotionController(emotion_repository=emotion_repo)
+        return _get_emotion_controller
+    else:
+        raise ValueError(f"Unsupported controller type: {controller_type}")
 
-    return _get_controller
 
-# Репозитории
+# Repositories
 UserRepositoryDep = create_repo_dependency(UserRepository)
+AuthRepositoryDep = create_repo_dependency(AuthRepository)
+EmotionRepositoryDep = create_repo_dependency(EmotionRepository)
 
-# Контроллеры
+# Controllers
 UserControllerDep = create_controller_dependency(UserController)
+AuthControllerDep = create_controller_dependency(AuthController)
+EmotionControllerDep = create_controller_dependency(EmotionController)

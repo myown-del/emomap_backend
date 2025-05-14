@@ -4,5 +4,8 @@ dotenv
 dishka==1.3.0
 asyncpg
 uvicorn
-psycopg2
+psycopg2-binary
 sqlalchemy>=2.0.0
+alembic
+pydantic[email]
+passlib[bcrypt]

@@ -1,24 +1,23 @@
-.PHONY: venv lint pretty start build stop test
+.PHONY: venv lint pretty start start-db build stop test migrations migrate
 
 venv:
-	rm -rf venv
 	python -m venv venv
-	./venv/bin/pip install -r requirements.txt
+	.\venv\Scripts\pip install -r requirements.txt
 
 start:
-	docker compose -f deployment/docker-compose.yml up --force-recreate --remove-orphans
+	docker compose -f docker-compose.yml up --force-recreate --remove-orphans
 
 stop:
-	docker compose -f deployment/docker-compose.yml down
+	docker compose -f docker-compose.yml down
 
 build:
-	docker compose -f deployment/docker-compose.yml build
+	docker compose -f docker-compose.yml build
 
 start-db:
-	docker compose -f deployment/docker-compose.yml up -d db
+	docker compose -f docker-compose.yml up -d db
 
 migrations:
-	alembic revision --autogenerate -m "$(message)"
+	alembic revision --autogenerate
 
 migrate:
 	alembic upgrade head
