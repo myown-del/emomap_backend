@@ -23,15 +23,15 @@ class AuthController(BaseController):
         # Hash the password securely
         password_hash = hash_password(password)
         
-        # Create new user
-        new_user = await self.user_repo.create_user(
-            unique_id=str(uuid.uuid4()),
+        # Create user
+        user = await self.user_repo.create_user(
             email=email,
-            password_hash=password_hash
+            password_hash=password_hash,
+            name=None
         )
         
         # Create session for the new user
-        session = await self.auth_repo.create_session(new_user.id)
+        session = await self.auth_repo.create_session(user.id)
         
         return session.session_id
     

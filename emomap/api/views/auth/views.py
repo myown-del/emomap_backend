@@ -18,26 +18,32 @@ async def register_simple(
 ):
     """Simplified registration that returns only the session ID"""
     # User validation would happen in the controller
-    session_id = await auth_controller.register(
-        email=request.email,
-        password=request.password
-    )
+    try:
+        session_id = await auth_controller.register(
+            email=request.email,
+            password=request.password
+        )
 
-    response = JSONResponse(
-        content={"session_id": session_id},
-        status_code=status.HTTP_201_CREATED
-    )
+        response = JSONResponse(
+            content={"session_id": session_id},
+            status_code=status.HTTP_201_CREATED
+        )
 
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=86400
-    )
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            max_age=86400
+        )
 
-    return response
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email already exists",
+        )
 
 
 @router.post("/login", response_model=SessionResponse)
@@ -45,25 +51,32 @@ async def login_simple(
     request: LoginRequest,
     auth_controller: AuthController = Depends(AuthControllerDep)
 ):
-    session_id = await auth_controller.login(
-        email=request.email,
-        password=request.password
-    )
+    try:
+        session_id = await auth_controller.login(
+            email=request.email,
+            password=request.password
+        )
 
-    response = JSONResponse(
-        content={"session_id": session_id}
-    )
+        response = JSONResponse(
+            content={"session_id": session_id}
+        )
 
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=86400
-    )
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            max_age=86400
+        )
 
-    return response
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

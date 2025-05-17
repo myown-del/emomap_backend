@@ -6,7 +6,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from ..models.users import UserDB, SessionDB, UserProfileDB
+from ..models.users import UserDB, SessionDB
 from .base import BaseRepository
 
 
@@ -27,7 +27,7 @@ class AuthRepository(BaseRepository):
     async def get_session(self, session_id: str) -> Optional[SessionDB]:
         """Get session by ID"""
         stmt = select(SessionDB).where(SessionDB.session_id == session_id).options(
-            joinedload(SessionDB.user).joinedload(UserDB.profile)
+            joinedload(SessionDB.user)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
@@ -38,7 +38,7 @@ class AuthRepository(BaseRepository):
             SessionDB.session_id == session_id,
             SessionDB.expires_at > datetime.utcnow()
         ).options(
-            joinedload(SessionDB.user).joinedload(UserDB.profile)
+            joinedload(SessionDB.user)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()

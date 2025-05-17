@@ -8,7 +8,6 @@ class EmotionDB(Base):
     __tablename__ = "emotions"
 
     id = Column(Integer, primary_key=True)
-    unique_id = Column(String(255), unique=True, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     rating = Column(Integer, nullable=False)

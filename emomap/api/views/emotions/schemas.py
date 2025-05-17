@@ -14,7 +14,6 @@ class EmotionCreate(BaseModel):
 class EmotionResponse(BaseModel):
     """Response model for emotion data"""
     id: int
-    unique_id: str
     latitude: float
     longitude: float
     rating: int

@@ -13,7 +13,6 @@ class EmotionCreateDTO(BaseModel):
 
 class EmotionResponseDTO(BaseModel):
     id: int
-    unique_id: str
     latitude: float
     longitude: float
     rating: int

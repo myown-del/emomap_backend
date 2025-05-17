@@ -42,16 +42,6 @@ class EmotionController(BaseController):
             
         return self._model_validate(EmotionDetailDTO, emotion)
     
-    async def get_emotion_by_unique_id(self, unique_id: str) -> Optional[EmotionDetailDTO]:
-        """
-        Get emotion by unique ID with user details
-        """
-        emotion = await self.emotion_repository.get_by_unique_id(unique_id)
-        if not emotion:
-            return None
-            
-        return self._model_validate(EmotionDetailDTO, emotion)
-    
     async def get_user_emotions(self, user_id: int) -> list[EmotionResponseDTO]:
         """
         Get all emotions for a specific user

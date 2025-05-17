@@ -15,7 +15,6 @@ class EmotionRepository(BaseRepository):
         Create a new emotion record
         """
         emotion = EmotionDB(
-            unique_id=str(uuid.uuid4()),
             user_id=user_id,
             latitude=latitude,
             longitude=longitude,
@@ -33,15 +32,6 @@ class EmotionRepository(BaseRepository):
         """
         result = await self.session.execute(
             select(EmotionDB).where(EmotionDB.id == emotion_id)
-        )
-        return result.scalar_one_or_none()
-    
-    async def get_by_unique_id(self, unique_id: str) -> EmotionDB:
-        """
-        Get emotion by unique ID
-        """
-        result = await self.session.execute(
-            select(EmotionDB).where(EmotionDB.unique_id == unique_id)
         )
         return result.scalar_one_or_none()
     

@@ -4,7 +4,7 @@ from typing import Optional
 from emomap.controllers.users import UserController
 from emomap.controllers.auth import AuthController
 from emomap.dependencies import UserControllerDep, AuthControllerDep
-from .schemas import UserResponse, ProfileUpdateRequest, UserProfileResponse
+from .schemas import UserResponse, ProfileUpdateRequest
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -32,7 +32,7 @@ async def get_current_user_profile(
     return user
 
 
-@router.put("/me/profile", response_model=UserProfileResponse)
+@router.put("/me/profile", response_model=UserResponse)
 async def update_current_user_profile(
     profile_data: ProfileUpdateRequest,
     session_id: Optional[str] = Cookie(None, alias="session_id"),
@@ -53,8 +53,8 @@ async def update_current_user_profile(
             detail="Invalid or expired session"
         )
     
-    user_profile = await user_controller.update_user_profile(
+    updated_user = await user_controller.update_user(
         user_id=user.id,
         name=profile_data.name
     )
-    return user_profile
+    return updated_user
