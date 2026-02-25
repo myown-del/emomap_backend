@@ -8,10 +8,21 @@ from .controllers.base import BaseController
 from .controllers.users import UserController
 from .controllers.auth import AuthController
 from .controllers.emotions import EmotionController
+from .config import (
+    SMTP_FROM_EMAIL,
+    SMTP_HOST,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_TIMEOUT_SECONDS,
+    SMTP_USERNAME,
+    SMTP_USE_STARTTLS,
+    SMTP_USE_TLS,
+)
 from .infrastructure.db.repositories.base import BaseRepository
 from .infrastructure.db.repositories.users import UserRepository
 from .infrastructure.db.repositories.auth import AuthRepository
 from .infrastructure.db.repositories.emotions import EmotionRepository
+from .services.email_sender import SMTPEmailSender
 
 RepoType = TypeVar("RepoType", bound=BaseRepository)
 CtrlType = TypeVar("CtrlType", bound=BaseController)
@@ -36,7 +47,21 @@ def create_controller_dependency(controller_type: Type[CtrlType]) -> Callable[..
             auth_repo: AuthRepository = Depends(AuthRepositoryDep),
             user_repo: UserRepository = Depends(UserRepositoryDep)
         ) -> AuthController:
-            return AuthController(auth_repo=auth_repo, user_repo=user_repo)
+            email_sender = SMTPEmailSender(
+                host=SMTP_HOST,
+                port=SMTP_PORT,
+                username=SMTP_USERNAME,
+                password=SMTP_PASSWORD,
+                from_email=SMTP_FROM_EMAIL,
+                use_tls=SMTP_USE_TLS,
+                use_starttls=SMTP_USE_STARTTLS,
+                timeout=SMTP_TIMEOUT_SECONDS,
+            )
+            return AuthController(
+                auth_repo=auth_repo,
+                user_repo=user_repo,
+                email_sender=email_sender,
+            )
         return _get_auth_controller
     elif controller_type == UserController:
         def _get_user_controller(

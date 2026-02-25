@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -15,6 +15,11 @@ class UserDB(Base):
 
     # Relationships
     sessions = relationship("SessionDB", back_populates="user", cascade="all, delete-orphan")
+    password_reset_tokens = relationship(
+        "PasswordResetTokenDB",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class SessionDB(Base):
@@ -28,3 +33,17 @@ class SessionDB(Base):
     
     # Relationship
     user = relationship("UserDB", back_populates="sessions")
+
+
+class PasswordResetTokenDB(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    code = Column(String(4), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False, nullable=False)
+    attempts = Column(Integer, default=0, nullable=False)
+
+    user = relationship("UserDB", back_populates="password_reset_tokens")

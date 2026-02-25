@@ -64,3 +64,15 @@ class UserRepository(BaseRepository):
         ).offset(skip).limit(limit)
         result = await self.session.execute(stmt)
         return result.unique().scalars().all()
+
+    async def update_password_hash(self, user_id: int, password_hash: str) -> UserDB:
+        stmt = select(UserDB).where(UserDB.id == user_id)
+        result = await self.session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise ValueError(f"User with ID {user_id} not found")
+
+        user.password_hash = password_hash
+        await self.session.flush()
+        return user

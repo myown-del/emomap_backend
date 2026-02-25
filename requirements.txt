@@ -9,3 +9,5 @@ sqlalchemy>=2.0.0
 alembic
 pydantic[email]
 passlib[bcrypt]
+bcrypt<4.1
+aiosmtplib

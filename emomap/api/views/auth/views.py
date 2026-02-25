@@ -3,9 +3,16 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 
 from emomap.controllers.auth import AuthController
-from emomap.controllers.users import UserController
-from emomap.dependencies import AuthControllerDep, UserControllerDep
-from .schemas import RegisterRequest, LoginRequest, SessionResponse
+from emomap.dependencies import AuthControllerDep
+from .schemas import (
+    LoginRequest,
+    PasswordResetConfirmRequest,
+    PasswordResetRequest,
+    PasswordResetRequestResponse,
+    PasswordResetVerifyRequest,
+    RegisterRequest,
+    SessionResponse,
+)
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -39,7 +46,7 @@ async def register_simple(
         )
 
         return response
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists",
@@ -71,7 +78,7 @@ async def login_simple(
         )
 
         return response
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
@@ -91,3 +98,58 @@ async def logout(
     response.delete_cookie(key="session_id")
     
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/password-reset/request",
+    response_model=PasswordResetRequestResponse,
+)
+async def password_reset_request(
+    request: PasswordResetRequest,
+    auth_controller: AuthController = Depends(AuthControllerDep),
+):
+    try:
+        await auth_controller.request_password_reset(request.email)
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        )
+
+    return {"message": "If this email exists, the reset code has been sent"}
+
+
+@router.post(
+    "/password-reset/verify",
+    response_model=bool,
+)
+async def password_reset_verify(
+    request: PasswordResetVerifyRequest,
+    auth_controller: AuthController = Depends(AuthControllerDep),
+):
+    return await auth_controller.verify_password_reset_code(
+        email=request.email,
+        code=request.code,
+    )
+
+
+@router.post(
+    "/password-reset/confirm",
+    response_model=PasswordResetRequestResponse,
+)
+async def password_reset_confirm(
+    request: PasswordResetConfirmRequest,
+    auth_controller: AuthController = Depends(AuthControllerDep),
+):
+    try:
+        await auth_controller.confirm_password_reset(
+            reset_token=request.reset_token,
+            new_password=request.new_password,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+
+    return {"message": "Password has been reset successfully"}
