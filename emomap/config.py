@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 from dotenv import load_dotenv
 
@@ -9,6 +10,34 @@ def _to_bool(value: str | None, default: bool = False) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+class AppEnvironment(str, Enum):
+    DEV = "dev"
+    TEST = "test"
+    PROD = "prod"
+
+
+def _parse_environment() -> AppEnvironment:
+    raw_environment = os.getenv("ENVIRONMENT")
+    if raw_environment is None:
+        raw_environment = os.getenv("environment")
+
+    if raw_environment is None or not raw_environment.strip():
+        raise ValueError(
+            "ENVIRONMENT is required and must be one of: dev, test, prod"
+        )
+
+    normalized_environment = raw_environment.strip().lower()
+    try:
+        return AppEnvironment(normalized_environment)
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid ENVIRONMENT '{raw_environment}'. Allowed values: dev, test, prod"
+        ) from exc
+
+
+ENVIRONMENT = _parse_environment()
 
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")

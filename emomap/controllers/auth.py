@@ -1,8 +1,11 @@
+import logging
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional
 
 from ..config import (
+    ENVIRONMENT,
+    AppEnvironment,
     PASSWORD_RESET_CODE_TTL_MINUTES,
     PASSWORD_RESET_MAX_ATTEMPTS,
 )
@@ -12,6 +15,11 @@ from ..infrastructure.db.repositories.users import UserRepository
 from ..services.email_sender import EmailSender
 from ..utils.password import hash_password, verify_password
 from .base import BaseController
+
+from aiosmtplib.errors import SMTPException
+
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class AuthController(BaseController):
@@ -93,12 +101,20 @@ class AuthController(BaseController):
             expires_at=expires_at,
         )
 
+        if ENVIRONMENT == AppEnvironment.DEV:
+            logger.info(
+                "Password reset code generated (dev mode): email=%s code=%s",
+                user.email,
+                code,
+            )
+            return
+
         try:
             await self.email_sender.send_password_reset_code(
                 to_email=user.email,
                 code=code,
             )
-        except Exception as exc:
+        except SMTPException as exc:
             raise RuntimeError("Failed to send reset code") from exc
 
     async def verify_password_reset_code(self, email: str, code: str) -> bool:

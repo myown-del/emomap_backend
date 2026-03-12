@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Cookie
 from fastapi.responses import JSONResponse
 from typing import Optional
@@ -16,6 +17,7 @@ from .schemas import (
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+logger = logging.getLogger("uvicorn.error")
 
 
 @router.post("/register", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
@@ -108,14 +110,7 @@ async def password_reset_request(
     request: PasswordResetRequest,
     auth_controller: AuthController = Depends(AuthControllerDep),
 ):
-    try:
-        await auth_controller.request_password_reset(request.email)
-    except RuntimeError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(exc),
-        )
-
+    await auth_controller.request_password_reset(request.email)
     return {"message": "If this email exists, the reset code has been sent"}
 
 
