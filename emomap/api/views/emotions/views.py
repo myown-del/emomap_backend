@@ -136,7 +136,7 @@ async def export_user_emotions_csv(
     
     # Write CSV header
     writer.writerow([
-        "ID", "Unique ID", "Latitude", "Longitude", 
+        "ID", "Latitude", "Longitude",
         "Rating", "Comment", "Created At"
     ])
     
@@ -144,7 +144,6 @@ async def export_user_emotions_csv(
     for emotion in emotions:
         writer.writerow([
             emotion.id,
-            emotion.unique_id,
             emotion.latitude,
             emotion.longitude,
             emotion.rating,
@@ -156,7 +155,6 @@ async def export_user_emotions_csv(
     buffer.seek(0)
     
     # Generate filename based on current date
-    from datetime import datetime
     filename = f"emotions_export_{datetime.utcnow().strftime('%Y%m%d')}.csv"
     
     # Return streaming response with CSV data

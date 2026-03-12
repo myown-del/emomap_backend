@@ -16,3 +16,5 @@ class UserResponse(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     """Request model for updating a user's profile"""
     name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None

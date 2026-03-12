@@ -41,7 +41,9 @@ class UserRepository(BaseRepository):
     async def update_user(
         self,
         user_id: int,
-        name: Optional[str] = None
+        name: Optional[str] = None,
+        email: Optional[str] = None,
+        password_hash: Optional[str] = None,
     ) -> UserDB:
         # Get the user first
         stmt = select(UserDB).where(UserDB.id == user_id)
@@ -54,6 +56,10 @@ class UserRepository(BaseRepository):
         # Update fields if provided
         if name is not None:
             user.name = name
+        if email is not None:
+            user.email = email
+        if password_hash is not None:
+            user.password_hash = password_hash
             
         await self.session.flush()
         return user
