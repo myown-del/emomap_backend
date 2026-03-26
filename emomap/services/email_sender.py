@@ -1,6 +1,10 @@
+import logging
 from typing import Protocol
 
 import httpx
+
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class EmailSender(Protocol):
@@ -52,6 +56,7 @@ class UnisenderEmailSender:
             "X-API-KEY": self.api_key,
         }
         payload = {"message": message}
+        logger.info("UniSender request payload: %s", payload)
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -60,12 +65,23 @@ class UnisenderEmailSender:
                     headers=headers,
                     json=payload,
                 )
+                logger.info(
+                    "UniSender response received: status=%s body=%s",
+                    response.status_code,
+                    response.text,
+                )
                 response.raise_for_status()
         except httpx.HTTPStatusError as exc:
+            logger.error(
+                "UniSender HTTP error: status=%s body=%s",
+                exc.response.status_code,
+                exc.response.text,
+            )
             raise EmailDeliveryError(
                 f"UniSender API returned {exc.response.status_code}: {exc.response.text}"
             ) from exc
         except httpx.HTTPError as exc:
+            logger.exception("UniSender request failed before receiving a valid response")
             raise EmailDeliveryError("Failed to call UniSender API") from exc
 
 

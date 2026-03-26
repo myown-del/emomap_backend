@@ -128,3 +128,6 @@ dmypy.json
 .pyre/ 
 
 postgres_data/
+
+test_unisender_email.py
+test2.py
