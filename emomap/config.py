@@ -57,14 +57,14 @@ DB_URL = DB_URL_FORMAT.format(
 API_PORT = os.getenv("API_PORT", 8080)
 API_RELOAD = _to_bool(os.getenv("API_RELOAD"), True)
 
-SMTP_HOST = os.getenv("SMTP_HOST")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL")
-SMTP_USE_TLS = _to_bool(os.getenv("SMTP_USE_TLS"), False)
-SMTP_USE_STARTTLS = _to_bool(os.getenv("SMTP_USE_STARTTLS"), True)
-SMTP_TIMEOUT_SECONDS = int(os.getenv("SMTP_TIMEOUT_SECONDS", "10"))
+UNISENDER_API_KEY = os.getenv("UNISENDER_API_KEY")
+UNISENDER_BASE_URL = os.getenv(
+    "UNISENDER_BASE_URL",
+    "https://goapi.unisender.ru/ru/transactional/api/v1",
+)
+UNISENDER_FROM_EMAIL = os.getenv("UNISENDER_FROM_EMAIL")
+UNISENDER_FROM_NAME = os.getenv("UNISENDER_FROM_NAME")
+UNISENDER_TIMEOUT_SECONDS = int(os.getenv("UNISENDER_TIMEOUT_SECONDS", "10"))
 
 PASSWORD_RESET_CODE_TTL_MINUTES = int(os.getenv("PASSWORD_RESET_CODE_TTL_MINUTES", "10"))
 PASSWORD_RESET_MAX_ATTEMPTS = int(os.getenv("PASSWORD_RESET_MAX_ATTEMPTS", "5"))

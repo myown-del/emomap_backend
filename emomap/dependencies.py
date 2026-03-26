@@ -9,20 +9,17 @@ from .controllers.users import UserController
 from .controllers.auth import AuthController
 from .controllers.emotions import EmotionController
 from .config import (
-    SMTP_FROM_EMAIL,
-    SMTP_HOST,
-    SMTP_PASSWORD,
-    SMTP_PORT,
-    SMTP_TIMEOUT_SECONDS,
-    SMTP_USERNAME,
-    SMTP_USE_STARTTLS,
-    SMTP_USE_TLS,
+    UNISENDER_API_KEY,
+    UNISENDER_BASE_URL,
+    UNISENDER_FROM_EMAIL,
+    UNISENDER_FROM_NAME,
+    UNISENDER_TIMEOUT_SECONDS,
 )
 from .infrastructure.db.repositories.base import BaseRepository
 from .infrastructure.db.repositories.users import UserRepository
 from .infrastructure.db.repositories.auth import AuthRepository
 from .infrastructure.db.repositories.emotions import EmotionRepository
-from .services.email_sender import SMTPEmailSender
+from .services.email_sender import UnisenderEmailSender
 
 RepoType = TypeVar("RepoType", bound=BaseRepository)
 CtrlType = TypeVar("CtrlType", bound=BaseController)
@@ -47,15 +44,12 @@ def create_controller_dependency(controller_type: Type[CtrlType]) -> Callable[..
             auth_repo: AuthRepository = Depends(AuthRepositoryDep),
             user_repo: UserRepository = Depends(UserRepositoryDep)
         ) -> AuthController:
-            email_sender = SMTPEmailSender(
-                host=SMTP_HOST,
-                port=SMTP_PORT,
-                username=SMTP_USERNAME,
-                password=SMTP_PASSWORD,
-                from_email=SMTP_FROM_EMAIL,
-                use_tls=SMTP_USE_TLS,
-                use_starttls=SMTP_USE_STARTTLS,
-                timeout=SMTP_TIMEOUT_SECONDS,
+            email_sender = UnisenderEmailSender(
+                api_key=UNISENDER_API_KEY,
+                from_email=UNISENDER_FROM_EMAIL,
+                from_name=UNISENDER_FROM_NAME,
+                base_url=UNISENDER_BASE_URL,
+                timeout=UNISENDER_TIMEOUT_SECONDS,
             )
             return AuthController(
                 auth_repo=auth_repo,

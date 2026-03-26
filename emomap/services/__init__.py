@@ -1,1 +1,6 @@
-from .email_sender import EmailSender, SMTPEmailSender, NoopEmailSender
+from .email_sender import (
+    EmailDeliveryError,
+    EmailSender,
+    NoopEmailSender,
+    UnisenderEmailSender,
+)

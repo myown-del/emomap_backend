@@ -12,11 +12,9 @@ from ..config import (
 from ..dto.user import UserDTO
 from ..infrastructure.db.repositories.auth import AuthRepository
 from ..infrastructure.db.repositories.users import UserRepository
-from ..services.email_sender import EmailSender
+from ..services.email_sender import EmailDeliveryError, EmailSender
 from ..utils.password import hash_password, verify_password
 from .base import BaseController
-
-from aiosmtplib.errors import SMTPException
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -114,7 +112,7 @@ class AuthController(BaseController):
                 to_email=user.email,
                 code=code,
             )
-        except SMTPException as exc:
+        except EmailDeliveryError as exc:
             raise RuntimeError("Failed to send reset code") from exc
 
     async def verify_password_reset_code(self, email: str, code: str) -> bool:

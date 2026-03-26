@@ -10,4 +10,4 @@ alembic
 pydantic[email]
 passlib[bcrypt]
 bcrypt<4.1
-aiosmtplib
+httpx

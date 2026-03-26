@@ -1,55 +1,72 @@
-from email.message import EmailMessage
 from typing import Protocol
 
-import aiosmtplib
+import httpx
 
 
 class EmailSender(Protocol):
     async def send_password_reset_code(self, to_email: str, code: str) -> None:
-        pass
+        ...
 
 
-class SMTPEmailSender:
+class EmailDeliveryError(RuntimeError):
+    pass
+
+
+class UnisenderEmailSender:
     def __init__(
         self,
-        host: str,
-        port: int,
-        username: str | None,
-        password: str | None,
+        api_key: str | None,
         from_email: str | None,
-        use_tls: bool = False,
-        use_starttls: bool = True,
+        base_url: str,
         timeout: int = 10,
+        from_name: str | None = None,
     ) -> None:
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
+        self.api_key = api_key
         self.from_email = from_email
-        self.use_tls = use_tls
-        self.use_starttls = use_starttls
+        self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.from_name = from_name
 
     async def send_password_reset_code(self, to_email: str, code: str) -> None:
-        if not self.host or not self.from_email:
-            raise ValueError("SMTP configuration is incomplete")
+        if not self.api_key or not self.from_email:
+            raise EmailDeliveryError("UniSender configuration is incomplete")
 
-        message = EmailMessage()
-        message["From"] = self.from_email
-        message["To"] = to_email
-        message["Subject"] = "Password reset code"
-        message.set_content(f"Your password reset code is: {code}")
+        message = {
+            "recipients": [{"email": to_email}],
+            "subject": "Password reset code",
+            "from_email": self.from_email,
+            "body": {
+                "plaintext": f"Your password reset code is: {code}",
+                "html": (
+                    "<p>Your password reset code is: "
+                    f"<strong>{code}</strong></p>"
+                ),
+            },
+        }
+        if self.from_name:
+            message["from_name"] = self.from_name
 
-        await aiosmtplib.send(
-            message,
-            hostname=self.host,
-            port=self.port,
-            username=self.username,
-            password=self.password,
-            use_tls=self.use_tls,
-            start_tls=self.use_starttls,
-            timeout=self.timeout,
-        )
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-KEY": self.api_key,
+        }
+        payload = {"message": message}
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/email/send.json",
+                    headers=headers,
+                    json=payload,
+                )
+                response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise EmailDeliveryError(
+                f"UniSender API returned {exc.response.status_code}: {exc.response.text}"
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise EmailDeliveryError("Failed to call UniSender API") from exc
 
 
 class NoopEmailSender:
